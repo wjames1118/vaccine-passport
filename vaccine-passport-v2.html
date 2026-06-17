@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跨國疫苗護照</title>
+<style>
+:root {
+  --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;
+  --tw:#16a34a;--sg:#2563eb;--jp:#dc2626;
+  --done:#15803d;--due:#d97706;--overdue:#dc2626;--future:#94a3b8;--upcoming:#7c3aed;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Noto Sans TC","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#1e40af,#0f766e);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hdr-title{font-size:18px;font-weight:700;letter-spacing:.5px}
+.hdr-sub{font-size:11px;opacity:.75;margin-top:2px}
+.lang-btns{display:flex;gap:4px}
+.lang-btn{padding:4px 10px;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;border-radius:6px;cursor:pointer;font-size:12px;transition:.15s}
+.lang-btn.active{background:rgba(255,255,255,.25);border-color:#fff}
+
+/* MAIN */
+.main{max-width:760px;margin:0 auto;padding:16px}
+
+/* PROFILE CARD */
+.profile-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.profile-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:#f8fafc;color:var(--text);transition:.15s}
+.field input:focus,.field select:focus{border-color:#3b82f6;background:#fff}
+.field input[type=date]{min-width:140px}
+.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:.15s}
+.btn-primary{background:#1e40af;color:#fff}.btn-primary:hover{background:#1d4ed8}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}.btn-ghost:hover{background:var(--bg)}
+.btn-danger{background:#fee2e2;color:var(--overdue);border:1px solid #fecaca}.btn-danger:hover{background:#fecaca}
+
+/* COUNTRY TOGGLES */
+.country-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.country-label{font-size:12px;color:var(--muted);font-weight:600;margin-right:4px}
+.ctoggle{padding:5px 12px;border-radius:20px;border:2px solid transparent;cursor:pointer;font-size:12px;font-weight:700;transition:.15s;opacity:.4}
+.ctoggle.tw{border-color:var(--tw);color:var(--tw)}.ctoggle.tw.on{background:#dcfce7;opacity:1}
+.ctoggle.sg{border-color:var(--sg);color:var(--sg)}.ctoggle.sg.on{background:#dbeafe;opacity:1}
+.ctoggle.jp{border-color:var(--jp);color:var(--jp)}.ctoggle.jp.on{background:#fee2e2;opacity:1}
+
+/* SUMMARY */
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;cursor:pointer;transition:.15s}
+.sum-card:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.sum-card.active{border-width:2px}
+.sum-card.active.c-overdue{border-color:var(--overdue);background:#fff5f5}
+.sum-card.active.c-due{border-color:var(--due);background:#fffbeb}
+.sum-card.active.c-done{border-color:var(--done);background:#f0fdf4}
+.sum-card.active.c-future{border-color:var(--future);background:#f8fafc}
+.sum-num{font-size:22px;font-weight:700;line-height:1}
+.sum-label{font-size:11px;color:var(--muted);margin-top:3px}
+.c-overdue .sum-num{color:var(--overdue)}
+.c-due .sum-num{color:var(--due)}
+.c-done .sum-num{color:var(--done)}
+.c-future .sum-num{color:var(--future)}
+
+/* VACCINE ROWS */
+.vgroup{margin-bottom:8px}
+.vgroup-header{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 4px 4px;display:flex;align-items:center;gap:6px}
+.vrow{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:5px;display:flex;gap:10px;align-items:center;transition:.15s}
+.vrow:hover{box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.vrow.is-done{opacity:.65}
+.vrow-check{flex-shrink:0}
+.vrow-check input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--done)}
+.vrow-info{flex:1;min-width:0}
+.vrow-name{font-weight:600;font-size:14px}
+.vrow-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.vrow-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.status-pill{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
+.pill-overdue{background:#fee2e2;color:var(--overdue)}
+.pill-due{background:#fef9c3;color:#92400e}
+.pill-upcoming{background:#ede9fe;color:#5b21b6}
+.pill-done{background:#dcfce7;color:var(--done)}
+.pill-future{background:#f1f5f9;color:var(--future)}
+.ctags{display:flex;gap:3px}
+.ctag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px}
+.ctag.tw{background:#dcfce7;color:#15803d}
+.ctag.sg{background:#dbeafe;color:#1d4ed8}
+.ctag.jp{background:#fee2e2;color:#991b1b}
+
+/* DATE INPUT */
+.date-input{padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#f8fafc;color:var(--text);width:120px}
+.date-input:focus{outline:none;border-color:#3b82f6}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:8px}
+
+/* PRINT */
+.print-bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
+@media print{
+  .hdr,.lang-btns,.country-row,.summary,.print-bar,.vrow-check,.date-input,button{display:none!important}
+  body{background:#fff;font-size:12px}
+  .vrow{border:1px solid #ccc;break-inside:avoid;margin-bottom:4px}
+  .vrow.is-done .vrow-name::before{content:"✓ ";color:green}
+}
+
+/* RESPONSIVE */
+@media(max-width:500px){
+  .summary{grid-template-columns:repeat(2,1fr)}
+  .profile-row{flex-direction:column;align-items:stretch}
+  .vrow-right{display:none}
+}
+
+/* SETUP OVERLAY */
+.setup{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:14px;text-align:center}
+.setup-title{font-size:20px;font-weight:700;margin-bottom:8px}
+.setup-sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+.setup-fields{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.filter-label{font-size:12px;color:var(--muted)}
+.fbtn{padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--muted);cursor:pointer;font-size:12px;transition:.15s}
+.fbtn.active{background:#1e293b;color:#fff;border-color:#1e293b}
+
+/* PROFILES LIST */
+.profile-selector{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.profile-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:12px;font-weight:600;transition:.15s}
+.profile-chip.active{background:#1e293b;color:#fff;border-color:#1e293b}
+.profile-chip:hover:not(.active){background:var(--bg)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-title">🌏 <span data-t="title">跨國疫苗護照</span></div>
+    <div class="hdr-sub" data-t="subtitle">台灣 × 新加坡 × 日本</div>
+  </div>
+  <div class="lang-btns">
+    <button class="lang-btn active" onclick="setLang('zh')">中文</button>
+    <button class="lang-btn" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('ja')">日本語</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- PROFILE SELECTOR -->
+  <div id="profile-selector-bar" class="profile-selector" style="display:none"></div>
+
+  <!-- SETUP / PROFILE CARD -->
+  <div id="setup-card" class="setup">
+    <div class="setup-title">👶 <span data-t="setup_title">新增小孩資料</span></div>
+    <div class="setup-sub" data-t="setup_sub">輸入小孩的名字和生日，自動計算應打疫苗</div>
+    <div class="setup-fields">
+      <div class="field"><label data-t="child_name">小孩名字</label><input id="setup-name" type="text" placeholder="例：光希" style="min-width:120px"></div>
+      <div class="field"><label data-t="birthdate">出生日期</label><input id="setup-birth" type="date"></div>
+    </div>
+    <button class="btn btn-primary" onclick="createProfile()" data-t="btn_start">開始追蹤 →</button>
+  </div>
+
+  <!-- ACTIVE PROFILE BAR -->
+  <div id="active-profile-bar" class="profile-card" style="display:none">
+    <div class="profile-row">
+      <div style="font-size:28px">👧</div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:700" id="prof-name-display"></div>
+        <div style="font-size:12px;color:var(--muted)" id="prof-age-display"></div>
+      </div>
+      <button class="btn btn-sm btn-ghost" onclick="addNewProfile()" data-t="btn_add_child">＋ 新增小孩</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteProfile()" data-t="btn_delete">刪除此檔案</button>
+    </div>
+  </div>
+
+  <!-- COUNTRY TOGGLES -->
+  <div id="country-row" class="country-row" style="display:none">
+    <span class="country-label" data-t="countries">國家：</span>
+    <button class="ctoggle tw on" onclick="toggleCountry('tw')" id="ctog-tw">🇹🇼 TW</button>
+    <button class="ctoggle sg on" onclick="toggleCountry('sg')" id="ctog-sg">🇸🇬 SG</button>
+    <button class="ctoggle jp on" onclick="toggleCountry('jp')" id="ctog-jp">🇯🇵 JP</button>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="summary" class="summary" style="display:none">
+    <div class="sum-card c-overdue" onclick="filterStatus('overdue')" id="sc-overdue">
+      <div class="sum-num" id="cnt-overdue">0</div>
+      <div class="sum-label" data-t="overdue">已過期</div>
+    </div>
+    <div class="sum-card c-due" onclick="filterStatus('due')" id="sc-due">
+      <div class="sum-num" id="cnt-due">0</div>
+      <div class="sum-label" data-t="due_now">現在應打</div>
+    </div>
+    <div class="sum-card c-done" onclick="filterStatus('done')" id="sc-done">
+      <div class="sum-num" id="cnt-done">0</div>
+      <div class="sum-label" data-t="completed">已完成</div>
+    </div>
+    <div class="sum-card c-future" onclick="filterStatus('future')" id="sc-future">
+      <div class="sum-num" id="cnt-future">0</div>
+      <div class="sum-label" data-t="future">未來計畫</div>
+    </div>
+  </div>
+
+  <!-- PRINT BAR -->
+  <div id="print-bar" class="print-bar" style="display:none">
+    <button class="btn btn-ghost btn-sm" onclick="exportJSON()" data-t="btn_export">📥 匯出備份</button>
+    <button class="btn btn-sm" style="background:#1e293b;color:#fff" onclick="window.print()" data-t="btn_print">🖨 列印 / PDF</button>
+  </div>
+
+  <!-- VACCINE LIST -->
+  <div id="vaccine-list"></div>
+
+</div>
+
+<script>
+// =========================================================
+// TRANSLATIONS
+// =========================================================
+const TR = {
+  title:       { zh:'跨國疫苗護照', en:'Cross-border Vaccine Passport', ja:'国際ワクチンパスポート' },
+  subtitle:    { zh:'台灣 × 新加坡 × 日本', en:'Taiwan × Singapore × Japan', ja:'台湾 × シンガポール × 日本' },
+  setup_title: { zh:'新增小孩資料', en:'Add Child Profile', ja:'お子さまの情報を登録' },
+  setup_sub:   { zh:'輸入小孩的名字和生日，自動計算應打疫苗', en:'Enter your child\'s name and birthdate to track vaccines', ja:'お子さまの名前と生年月日を入力してください' },
+  child_name:  { zh:'小孩名字', en:'Child\'s Name', ja:'お子さまのお名前' },
+  birthdate:   { zh:'出生日期', en:'Date of Birth', ja:'生年月日' },
+  btn_start:   { zh:'開始追蹤 →', en:'Start Tracking →', ja:'追跡開始 →' },
+  btn_add_child:{ zh:'＋ 新增小孩', en:'＋ Add Child', ja:'＋ お子さまを追加' },
+  btn_delete:  { zh:'刪除此檔案', en:'Delete Profile', ja:'削除' },
+  countries:   { zh:'國家：', en:'Countries:', ja:'対象国：' },
+  overdue:     { zh:'已過期', en:'Overdue', ja:'期限超過' },
+  due_now:     { zh:'應打', en:'Due Now', ja:'今すぐ' },
+  completed:   { zh:'已完成', en:'Completed', ja:'完了' },
+  future:      { zh:'未來', en:'Future', ja:'将来' },
+  btn_export:  { zh:'📥 匯出備份', en:'📥 Export Backup', ja:'📥 バックアップ' },
+  btn_print:   { zh:'🖨 列印 / PDF', en:'🖨 Print / PDF', ja:'🖨 印刷 / PDF' },
+  status_overdue:  { zh:'🚨 逾期', en:'🚨 Overdue', ja:'🚨 期限超過' },
+  status_due:      { zh:'⚠️ 應打', en:'⚠️ Due', ja:'⚠️ 今すぐ' },
+  status_upcoming: { zh:'📅 即將到期', en:'📅 Upcoming', ja:'📅 もうすぐ' },
+  status_done:     { zh:'✅ 完成', en:'✅ Done', ja:'✅ 完了' },
+  status_future:   { zh:'🔮 未來', en:'🔮 Future', ja:'🔮 将来' },
+  dose:        { zh:'第', en:'Dose ', ja:'' },
+  dose_unit:   { zh:'劑', en:'', ja:'回目' },
+  age_months:  { zh:'個月', en:'m', ja:'ヶ月' },
+  age_years:   { zh:'歲', en:'yr', ja:'歳' },
+  section_overdue: { zh:'🚨 已過期（建議盡快補打）', en:'🚨 Overdue – Please catch up', ja:'🚨 期限超過（早急に接種を）' },
+  section_due:     { zh:'⚠️ 現在應打', en:'⚠️ Due Now', ja:'⚠️ 今すぐ接種' },
+  section_upcoming:{ zh:'📅 3個月內即將到期', en:'📅 Upcoming (within 3 months)', ja:'📅 3ヶ月以内に接種' },
+  section_done:    { zh:'✅ 已完成', en:'✅ Completed', ja:'✅ 完了' },
+  section_future:  { zh:'🔮 未來接種計畫', en:'🔮 Future Vaccines', ja:'🔮 将来の接種' },
+  annual:      { zh:'每年', en:'Annual', ja:'毎年' },
+  no_items:    { zh:'目前沒有項目', en:'No items', ja:'項目なし' },
+  rec_age:     { zh:'建議年齡', en:'Recommended age', ja:'推奨年齢' },
+  due_date:    { zh:'預計接種日', en:'Due date', ja:'接種予定日' },
+  date_done:   { zh:'接種日期', en:'Date given', ja:'接種日' },
+};
+
+function t(key) {
+  return TR[key]?.[LANG] || TR[key]?.zh || key;
+}
+
+// =========================================================
+// VACCINE SCHEDULE DATA
+// Age windows: [recommendedMonths, minMonths, maxMonths]
+// null = not in this country's schedule
+// =========================================================
+const VACCINES = [
+  {
+    id:'BCG', zh:'卡介苗', en:'BCG', ja:'BCGワクチン',
+    descZh:'結核病預防', descEn:'Tuberculosis', descJa:'結核予防',
+    doses:[
+      { n:1, zh:'第1劑', en:'Dose 1', ja:'1回目',
+        tw:[0,0,3], sg:[0,0,3], jp:[2,2,6] }
+    ]
+  },
+  {
+    id:'HepB', zh:'B型肝炎疫苗', en:'Hepatitis B (HepB)', ja:'B型肝炎ワクチン',
+    descZh:'', descEn:'', descJa:'',
+    doses:[
+      { n:1, zh:'第1劑', en:'Dose 1', ja:'1回目', tw:[0,0,2], sg:[0,0,2], jp:[0,0,3] },
+      { n:2, zh:'第2劑', en:'Dose 2', ja:'2回目', tw:[1,1,4], sg:[1,1,4], jp:[7,6,10] },
+      { n:3, zh:'第3劑', en:'Dose 3', ja:'3回目', tw:[6,4,14], sg:[6,4,14], jp:[10,9,14] },
+    ]
+  },
+  {
+    id:'DTaP5', zh:'五合一疫苗（DTaP-IPV-Hib）', en:'DTaP-IPV-Hib (5-in-1)', ja:'四種混合+Hib（5種）',
+    descZh:'白喉、破傷風、百日咳、小兒麻痺、嗜血桿菌', descEn:'Diphtheria, Tetanus, Pertussis, Polio, Hib', descJa:'ジフテリア、破傷風、百日咳、ポリオ、Hib',
+    doses:[
+      { n:1, zh:'第1劑', en:'Dose 1', ja:'1回目', tw:[2,2,4], sg:[3,3,5], jp:[2,2,4] },
+      { n:2, zh:'第2劑', en:'Dose 2', ja:'2回目', tw:[4,4,6], sg:[5,5,7], jp:[3,3,5] },
+      { n:3, zh:'第3劑', en:'Dose 3', ja:'3回目', tw:[6,5,9], sg:[6,5,9], jp:[4,4,7] },
+      { n:4, zh:'第4劑（加強）', en:'Dose 4 (Booster)', ja:'4回目（追加）', tw:[15,12,24], sg:[15,12,20], jp:[15,12,24] },
+    ]
+  },
+  {
+    id:'DTaP-booster', zh:'DTaP 第5劑（學齡前加強）', en:'DTaP Dose 5 (School entry booster)', ja:'DTaP 5回目（就学前追加）',
+    descZh:'入學前加強劑', descEn:'Pre-school booster', descJa:'就学前追加接種',
+    doses:[
+      { n:5, zh:'第5劑', en:'Dose 5', ja:'5回目', tw:[60,48,84], sg:null, jp:null }
+    ]
+  },
+  {
+    id:'PCV13', zh:'13價肺炎鏈球菌疫苗（結合型）', en:'PCV13 / Prevnar 13', ja:'13価肺炎球菌結合型ワクチン',
+    descZh:'肺炎鏈球菌預防', descEn:'Pneumococcal conjugate', descJa:'肺炎球菌感染症予防',
+    doses:[
+      { n:1, zh:'第1劑', en:'Dose 1', ja:'1回目', tw:[2,2,4], sg:[3,3,5], jp:[2,2,4] },
+      { n:2, zh:'第2劑', en:'Dose 2', ja:'2回目', tw:[4,4,6], sg:[5,5,7], jp:[3,3,5] },
+      { n:3, zh:'第3劑', en:'Dose 3', ja:'3回目', tw:[6,5,9], sg:[12,10,16], jp:[4,4,7] },
+      { n:4, zh:'第4劑（加強）', en:'Dose 4 (Booster)', ja:'4回目（追加）', tw:[15,12,18], sg:null, jp:[15,12,24] },
+    ]
+  },
+  {
+    id:'RV', zh:'輪狀病毒疫苗', en:'Rotavirus (RV)', ja:'ロタウイルスワクチン',
+    descZh:'預防輪狀病毒腸胃炎', descEn:'Rotavirus gastroenteritis prevention', descJa:'ロタウイルス感染症予防',
+    doses:[
+      { n:1, zh:'第1劑', en:'Dose 1', ja:'1回目', tw:[2,2,4], sg:[3,3,5], jp:[2,2,4] },
+      { n:2, zh:'第2劑', en:'Dose 2', ja:'2回目', tw:[4,3,6], sg:[5,4,7], jp:[3,3,5] },
+      { n:3, zh:'第3劑', en:'Dose 3（RV5 only）', ja:'3回目（RV5のみ）', tw:[6,5,9], sg:[6,5,9], jp:[4,4,7] },
+    ]
+  },
+  {
+    id:'MMR', zh:'麻疹、腮腺炎、德國麻疹混合疫苗', en:'MMR (Measles, Mumps, Rubella)', ja:'MMR／MR＋おたふくかぜワクチン',
+    descZh:'日本公費為MR疫苗，腮腺炎為自費', descEn:'Japan: MR is public; mumps vaccine is private', descJa:'日本の定期接種はMR。おたふくかぜは任意',
+    doses:[
+      { n:1, zh:'第1劑', en:'Dose 1', ja:'1回目', tw:[12,12,18], sg:[12,12,18], jp:[12,12,24] },
+      { n:2, zh:'第2劑', en:'Dose 2', ja:'2回目', tw:[60,60,84], sg:[18,15,30], jp:[60,60,96] },
+    ]
+  },
+  {
+    id:'VAR', zh:'水痘疫苗', en:'Varicella (Chickenpox)', ja:'水痘（みずぼうそう）ワクチン',
+    descZh:'', descEn:'', descJa:'',
+    doses:[
+      { n:1, zh:'第1劑', en:'Dose 1', ja:'1回目', tw:[12,12,18], sg:[15,12,24], jp:[12,12,18] },
+      { n:2, zh:'第2劑', en:'Dose 2', ja:'2回目', tw:null, sg:[18,18,36], jp:null },
+    ]
+  },
+  {
+    id:'HepA', zh:'A型肝炎疫苗', en:'Hepatitis A (HepA)', ja:'A型肝炎ワクチン（任意）',
+    descZh:'台灣公費；新加坡和日本為自費', descEn:'Public in TW; private in SG & JP', descJa:'台湾は公費、日本・SG は任意接種',
+    doses:[
+      { n:1, zh:'第1劑', en:'Dose 1', ja:'1回目', tw:[12,12,24], sg:null, jp:null },
+      { n:2, zh:'第2劑', en:'Dose 2（6–18個月後）', ja:'2回目（6〜18ヶ月後）', tw:[24,18,36], sg:null, jp:null },
+    ]
+  },
+  {
+    id:'JEV', zh:'日本腦炎疫苗（JEV）', en:'Japanese Encephalitis Vaccine (JEV)', ja:'日本脳炎ワクチン',
+    descZh:'新加坡非公費，視旅遊需求', descEn:'SG: not in national schedule (travel risk)', descJa:'シンガポールは定期接種外',
+    doses:[
+      { n:1, zh:'第1劑', en:'Dose 1', ja:'1回目', tw:[15,12,24], sg:null, jp:[36,36,48] },
+      { n:2, zh:'第2劑', en:'Dose 2', ja:'2回目', tw:[27,24,36], sg:null, jp:[36,36,60] },
+      { n:3, zh:'第3劑（追加）', en:'Dose 3 (Booster)', ja:'3回目（追加）', tw:[60,48,84], sg:null, jp:[48,48,72] },
+      { n:4, zh:'第4劑（二次追加）', en:'Dose 4 (2nd booster)', ja:'4回目（2次追加）', tw:null, sg:null, jp:[108,108,156] },
+    ]
+  },
+  {
+    id:'IPV5', zh:'注射式小兒麻痺疫苗（第5劑）', en:'IPV / OPV Dose 5 (School entry)', ja:'ポリオワクチン5回目',
+    descZh:'台灣入學前加強', descEn:'Taiwan school entry booster', descJa:'台湾の就学前追加',
+    doses:[
+      { n:5, zh:'第5劑', en:'Dose 5', ja:'5回目', tw:[60,48,84], sg:null, jp:null }
+    ]
+  },
+  {
+    id:'Flu', zh:'流行性感冒疫苗（每年）', en:'Influenza / Flu (Annual)', ja:'インフルエンザワクチン（毎年）',
+    descZh:'6個月以上每年接種；6歲前首次接種需2劑', descEn:'Annual from 6m+; 2 doses in first year if <9yr', descJa:'6ヶ月以降毎年。初回は2回接種',
+    doses:[
+      { n:0, zh:'每年（秋冬季）', en:'Annual (autumn/winter)', ja:'毎年（秋冬）', tw:[6,6,999], sg:null, jp:[6,6,999] }
+    ]
+  },
+  {
+    id:'Tdap', zh:'Tdap / Td（破傷風加強劑）', en:'Tdap Booster (school / junior high)', ja:'二種混合DT（定期）／Tdap（任意）',
+    descZh:'台灣、新加坡初中一年；日本公費DT，Tdap自費', descEn:'TW school entry + jr high; SG Sec 1; JP DT public', descJa:'台湾・SGは中1相当。日本の定期はDT',
+    doses:[
+      { n:1, zh:'第1劑（入學前）', en:'Dose 1 (school entry)', ja:'1回目（就学）', tw:[60,48,84], sg:null, jp:null },
+      { n:2, zh:'追加劑（國中）', en:'Booster (jr high ~13yr)', ja:'追加（中学）', tw:[156,144,180], sg:[120,108,144], jp:[132,120,156] },
+    ]
+  },
+  {
+    id:'HPV', zh:'人類乳突病毒疫苗（HPV）', en:'HPV Vaccine', ja:'HPVワクチン',
+    descZh:'台灣、新加坡：女生；日本：男女', descEn:'TW/SG: female; JP: male + female', descJa:'日本：男女両方',
+    doses:[
+      { n:1, zh:'第1劑（女生；日本男女）', en:'Dose 1 (F; JP: M+F)', ja:'1回目（日本は男女）', tw:[156,144,180], sg:[132,120,156], jp:[156,144,168] },
+      { n:2, zh:'第2劑（1–2個月後）', en:'Dose 2 (1-2m later)', ja:'2回目（1〜2ヶ月後）', tw:[157,145,182], sg:[133,121,158], jp:[157,145,170] },
+      { n:3, zh:'第3劑（6個月後）', en:'Dose 3 (6m after D1)', ja:'3回目（6ヶ月後）', tw:[162,150,186], sg:[138,126,162], jp:[162,150,174] },
+    ]
+  },
+];
+
+// =========================================================
+// STATE
+// =========================================================
+let LANG = 'zh';
+let STATE = {
+  profiles: [],
+  active: -1,
+  countries: { tw:true, sg:true, jp:true },
+  filterStatus: null,
+};
+let today = new Date();
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('vax_passport_v2');
+    if (s) STATE = JSON.parse(s);
+  } catch(e) {}
+  LANG = localStorage.getItem('vax_lang') || 'zh';
+}
+
+function saveState() {
+  localStorage.setItem('vax_passport_v2', JSON.stringify(STATE));
+  localStorage.setItem('vax_lang', LANG);
+}
+
+// =========================================================
+// CALCULATIONS
+// =========================================================
+function getAgeMonths(birthdate) {
+  const bd = new Date(birthdate);
+  const diff = today - bd;
+  return diff / (1000 * 60 * 60 * 24 * 30.44);
+}
+
+// Status of a dose given current age and completion state
+function getDoseStatus(ageWindow, ageMonths, checked) {
+  if (checked) return 'done';
+  if (!ageWindow) return 'n/a';
+  const [rec, min, max] = ageWindow;
+  if (ageMonths > max + 3) return 'overdue';
+  if (ageMonths >= min) return 'due';
+  if (ageMonths >= min - 3) return 'upcoming';
+  return 'future';
+}
+
+// Get the effective status considering selected countries
+function getEffectiveStatus(dose, ageMonths, checked, countries) {
+  if (checked) return 'done';
+  const windows = ['tw','sg','jp'].filter(c => countries[c] && dose[c]);
+  if (windows.length === 0) return 'n/a';
+  const statuses = windows.map(c => getDoseStatus(dose[c], ageMonths, false));
+  const order = ['overdue','due','upcoming','future'];
+  for (const s of order) {
+    if (statuses.includes(s)) return s;
+  }
+  return 'future';
+}
+
+function getRecAge(dose, countries) {
+  const wins = ['tw','sg','jp'].filter(c => countries[c] && dose[c]);
+  if (!wins.length) return null;
+  const minRec = Math.min(...wins.map(c => dose[c][0]));
+  return minRec;
+}
+
+function formatAge(months) {
+  if (months >= 24) {
+    const yr = Math.floor(months / 12);
+    const mo = Math.round(months % 12);
+    if (mo === 0) return yr + t('age_years');
+    return yr + t('age_years') + mo + t('age_months');
+  }
+  return Math.round(months) + t('age_months');
+}
+
+function getRecDate(birthdate, months) {
+  const bd = new Date(birthdate);
+  const d = new Date(bd);
+  d.setMonth(d.getMonth() + Math.round(months));
+  return d.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' });
+}
+
+// =========================================================
+// PROFILE MANAGEMENT
+// =========================================================
+function createProfile() {
+  const name = document.getElementById('setup-name').value.trim();
+  const birth = document.getElementById('setup-birth').value;
+  if (!name || !birth) { alert(LANG==='zh'?'請填寫名字和生日':'Please enter name and birthdate'); return; }
+  const profile = { name, birthdate: birth, doses: {}, notes: {} };
+  STATE.profiles.push(profile);
+  STATE.active = STATE.profiles.length - 1;
+  saveState();
+  render();
+}
+
+function deleteProfile() {
+  if (!confirm(LANG==='zh'?`確定要刪除「${activeProfile().name}」的資料嗎？`:`Delete ${activeProfile().name}'s profile?`)) return;
+  STATE.profiles.splice(STATE.active, 1);
+  STATE.active = STATE.profiles.length > 0 ? 0 : -1;
+  saveState();
+  render();
+}
+
+function addNewProfile() {
+  STATE.active = -1;
+  render();
+  document.getElementById('setup-name').focus();
+}
+
+function switchProfile(i) {
+  STATE.active = i;
+  STATE.filterStatus = null;
+  saveState();
+  render();
+}
+
+function activeProfile() {
+  return STATE.profiles[STATE.active] || null;
+}
+
+// =========================================================
+// DOSE CHECK/UNCHECK
+// =========================================================
+function toggleDose(vaccineId, doseN, el) {
+  const prof = activeProfile();
+  if (!prof) return;
+  const key = vaccineId + '-' + doseN;
+  prof.doses[key] = el.checked;
+  saveState();
+  render();
+}
+
+function setDoseDate(vaccineId, doseN, val) {
+  const prof = activeProfile();
+  if (!prof) return;
+  const key = vaccineId + '-' + doseN;
+  prof.notes[key] = val;
+  saveState();
+}
+
+// =========================================================
+// LANGUAGE
+// =========================================================
+function setLang(lang) {
+  LANG = lang;
+  saveState();
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim().toLowerCase().includes(lang === 'ja' ? '日' : lang)));
+  render();
+}
+
+// =========================================================
+// COUNTRY TOGGLE
+// =========================================================
+function toggleCountry(c) {
+  STATE.countries[c] = !STATE.countries[c];
+  document.getElementById('ctog-'+c).classList.toggle('on', STATE.countries[c]);
+  saveState();
+  render();
+}
+
+// =========================================================
+// FILTER BY STATUS
+// =========================================================
+function filterStatus(s) {
+  STATE.filterStatus = STATE.filterStatus === s ? null : s;
+  render();
+}
+
+// =========================================================
+// RENDER
+// =========================================================
+function render() {
+  // Translations
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.getAttribute('data-t');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    const l = b.textContent.trim();
+    b.classList.toggle('active', (LANG==='zh' && l==='中文') || (LANG==='en' && l==='EN') || (LANG==='ja' && l==='日本語'));
+  });
+
+  const prof = activeProfile();
+  const hasProfiles = STATE.profiles.length > 0;
+
+  // Profile selector bar
+  const selBar = document.getElementById('profile-selector-bar');
+  if (hasProfiles && STATE.profiles.length > 1) {
+    selBar.style.display = 'flex';
+    selBar.innerHTML = STATE.profiles.map((p,i) =>
+      `<div class="profile-chip ${i===STATE.active?'active':''}" onclick="switchProfile(${i})">${p.name}</div>`
+    ).join('') + `<div class="profile-chip" onclick="addNewProfile()">＋</div>`;
+  } else {
+    selBar.style.display = 'none';
+  }
+
+  // Show/hide setup vs active profile
+  document.getElementById('setup-card').style.display = (!prof) ? 'block' : 'none';
+  document.getElementById('active-profile-bar').style.display = prof ? 'block' : 'none';
+  document.getElementById('country-row').style.display = prof ? 'flex' : 'none';
+  document.getElementById('summary').style.display = prof ? 'grid' : 'none';
+  document.getElementById('print-bar').style.display = prof ? 'flex' : 'none';
+
+  // Country toggle states
+  ['tw','sg','jp'].forEach(c => {
+    document.getElementById('ctog-'+c).classList.toggle('on', STATE.countries[c]);
+  });
+
+  if (!prof) { document.getElementById('vaccine-list').innerHTML = ''; return; }
+
+  // Profile display
+  const ageM = getAgeMonths(prof.birthdate);
+  const ageYr = Math.floor(ageM / 12);
+  const ageMo = Math.round(ageM % 12);
+  document.getElementById('prof-name-display').textContent = prof.name;
+  const bd = new Date(prof.birthdate);
+  document.getElementById('prof-age-display').textContent =
+    bd.toLocaleDateString('zh-TW') + '　' +
+    (LANG==='ja' ? `${ageYr}歳${ageMo}ヶ月` : LANG==='en' ? `${ageYr}yr ${ageMo}m` : `${ageYr}歲${ageMo}個月`);
+
+  // Build dose status list
+  const groups = { overdue:[], due:[], upcoming:[], done:[], future:[] };
+  let totalItems = 0;
+
+  VACCINES.forEach(vax => {
+    vax.doses.forEach(dose => {
+      // Check if relevant to selected countries
+      const relevant = ['tw','sg','jp'].some(c => STATE.countries[c] && dose[c]);
+      if (!relevant) return;
+
+      const key = vax.id + '-' + dose.n;
+      const checked = !!prof.doses[key];
+      const status = getEffectiveStatus(dose, ageM, checked, STATE.countries);
+      if (status === 'n/a') return;
+
+      totalItems++;
+      const recAge = getRecAge(dose, STATE.countries);
+      const item = { vax, dose, key, checked, status, recAge };
+      if (status === 'done') groups.done.push(item);
+      else if (status === 'overdue') groups.overdue.push(item);
+      else if (status === 'due') groups.due.push(item);
+      else if (status === 'upcoming') groups.upcoming.push(item);
+      else groups.future.push(item);
+    });
+  });
+
+  // Update summary counts
+  document.getElementById('cnt-overdue').textContent = groups.overdue.length;
+  document.getElementById('cnt-due').textContent = groups.due.length + groups.upcoming.length;
+  document.getElementById('cnt-done').textContent = groups.done.length;
+  document.getElementById('cnt-future').textContent = groups.future.length;
+
+  // Update summary active state
+  ['overdue','due','done','future'].forEach(s => {
+    document.getElementById('sc-'+s).classList.toggle('active', STATE.filterStatus === s);
+  });
+
+  // Build vaccine list
+  const vList = document.getElementById('vaccine-list');
+  let html = '';
+
+  const sections = [
+    { key:'overdue', items: groups.overdue, label: t('section_overdue') },
+    { key:'due', items: [...groups.due, ...groups.upcoming], label: t('section_due') },
+    { key:'done', items: groups.done, label: t('section_done') },
+    { key:'future', items: groups.future, label: t('section_future') },
+  ];
+
+  sections.forEach(sec => {
+    if (STATE.filterStatus && STATE.filterStatus !== sec.key) return;
+    if (sec.items.length === 0 && STATE.filterStatus !== sec.key) return;
+    html += `<div class="vgroup"><div class="vgroup-header">${sec.label} <span style="color:var(--muted);font-weight:400">(${sec.items.length})</span></div>`;
+
+    if (sec.items.length === 0) {
+      html += `<div style="color:var(--muted);font-size:13px;padding:8px 4px">${t('no_items')}</div>`;
+    }
+
+    sec.items.forEach(({ vax, dose, key, checked, status, recAge }) => {
+      const vName = LANG==='en' ? vax.en : LANG==='ja' ? vax.ja : vax.zh;
+      const dLabel = LANG==='en' ? dose.en : LANG==='ja' ? dose.ja : dose.zh;
+      const vDesc = LANG==='en' ? vax.descEn : LANG==='ja' ? vax.descJa : vax.descZh;
+
+      const pillClass = {overdue:'pill-overdue',due:'pill-due',upcoming:'pill-due',done:'pill-done',future:'pill-future'}[status];
+      const pillText = t('status_' + (status==='upcoming'?'upcoming':status));
+
+      const ctags = ['tw','sg','jp'].filter(c => STATE.countries[c] && dose[c])
+        .map(c => `<span class="ctag ${c}">${c.toUpperCase()}</span>`).join('');
+
+      const dateVal = prof.notes[key] || '';
+      const recDateStr = recAge !== null && !checked
+        ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${t('rec_age')}: ${formatAge(recAge)} (${getRecDate(prof.birthdate, recAge)})</div>`
+        : '';
+
+      html += `<div class="vrow ${checked ? 'is-done' : ''}">
+        <div class="vrow-check">
+          <input type="checkbox" ${checked?'checked':''} onchange="toggleDose('${vax.id}',${dose.n},this)" title="${t('date_done')}">
+        </div>
+        <div class="vrow-info">
+          <div class="vrow-name">${vName}</div>
+          <div class="vrow-sub">${dLabel}${vDesc ? ' · '+vDesc : ''}</div>
+          ${recDateStr}
+          ${checked ? `<input class="date-input" type="date" value="${dateVal}" onchange="setDoseDate('${vax.id}',${dose.n},this.value)" title="${t('date_done')}" style="margin-top:4px">` : ''}
+        </div>
+        <div class="vrow-right">
+          <span class="status-pill ${pillClass}">${pillText}</span>
+          <div class="ctags">${ctags}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  vList.innerHTML = html || `<div class="empty"><div class="empty-icon">✅</div><div>All up to date!</div></div>`;
+}
+
+// =========================================================
+// EXPORT JSON BACKUP
+// =========================================================
+function exportJSON() {
+  const data = JSON.stringify(STATE, null, 2);
+  const blob = new Blob([data], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'vaccine-passport-backup.json';
+  a.click();
+}
+
+// =========================================================
+// IMPORT (for restoring backup)
+// =========================================================
+function importJSON() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        STATE = JSON.parse(ev.target.result);
+        saveState();
+        render();
+      } catch(err) {
+        alert('Invalid backup file');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// =========================================================
+// INIT
+// =========================================================
+loadState();
+render();
+</script>
+</body>
+</html>
